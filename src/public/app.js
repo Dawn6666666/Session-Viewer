@@ -49,6 +49,15 @@ document.addEventListener('DOMContentLoaded', () => {
     mangle: false,
   });
 
+  // Prevent indented lines from being parsed as code blocks
+  marked.use({
+    tokenizer: {
+      code(src) {
+        return null;
+      }
+    }
+  });
+
   // ==========================================================================
   // 1. Dark Mode / Light Mode Theme Switching
   // ==========================================================================
