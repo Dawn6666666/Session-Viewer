@@ -341,6 +341,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // --------------------------------------------------
       const userGroup = document.createElement('div');
       userGroup.className = 'user-turn-group';
+      // Bulletproof inline styles to bypass browser CSS cache issues
+      userGroup.style.alignSelf = 'flex-end';
+      userGroup.style.marginLeft = 'auto';
+      userGroup.style.marginRight = '0';
+      userGroup.style.maxWidth = '80%';
 
       // User role header
       const timeStr = formatTime(turn.timestamp);
