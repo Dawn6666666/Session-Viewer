@@ -114,13 +114,9 @@
                             <i data-lucide="menu" style="width: 14px; height: 14px; margin-right: 6px;"></i>
                             时间线滚动
                         </button>
-                        <button class="view-mode-btn" id="btnPreviewCleanMode">
+                        <button class="view-mode-btn" id="btnPreviewPureMode">
                             <i data-lucide="file-text" style="width: 14px; height: 14px; margin-right: 6px;"></i>
-                            干净版文本
-                        </button>
-                        <button class="view-mode-btn" id="btnPreviewSuperCleanMode">
-                            <i data-lucide="sparkles" style="width: 14px; height: 14px; margin-right: 6px;"></i>
-                            极简版文本
+                            纯净文本预览
                         </button>
                     </div>
 
@@ -146,9 +142,13 @@
                 <!-- Plaintext TXT Preview Container -->
                 <div class="txt-preview-container" id="txtPreviewContainer" style="display: none; width: 100%; max-width: 100%; padding: 0;">
                     <div class="artifact" style="margin: 0;">
-                        <div class="artifact-header">
-                            <span id="previewFileName">dialogue_clean.txt</span>
-                            <button class="btn-download" id="btnCopyTxt" style="height: 28px; padding: 0 12px; font-size: 0.72rem; cursor: pointer;">
+                        <div class="artifact-header" style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                            <span id="previewFileName" style="font-weight: 600;">dialogue_clean.txt</span>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.8rem; color: var(--text-secondary); user-select: none; margin-left: auto;">
+                                <input type="checkbox" id="chkShowIdeContext" checked style="accent-color: var(--accent-primary); width: 14px; height: 14px; cursor: pointer;">
+                                <span>显示 IDE 上下文 (活动文件/标签页)</span>
+                            </label>
+                            <button class="btn-download" id="btnCopyTxt" style="height: 28px; padding: 0 12px; font-size: 0.72rem; cursor: pointer; margin-left: 8px;">
                                 <i data-lucide="copy" style="width: 12px; height: 12px; margin-right: 4px;"></i>
                                 复制全文
                             </button>

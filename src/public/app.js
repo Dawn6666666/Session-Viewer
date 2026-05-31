@@ -33,8 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // New Pagination & Controls Elements
   const btnFocusMode = document.getElementById('btnFocusMode');
   const btnScrollMode = document.getElementById('btnScrollMode');
-  const btnPreviewCleanMode = document.getElementById('btnPreviewCleanMode');
-  const btnPreviewSuperCleanMode = document.getElementById('btnPreviewSuperCleanMode');
+  const btnPreviewPureMode = document.getElementById('btnPreviewPureMode');
   const paginationBar = document.getElementById('paginationBar');
   const btnPrevTurn = document.getElementById('btnPrevTurn');
   const btnNextTurn = document.getElementById('btnNextTurn');
@@ -44,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const txtPreviewContainer = document.getElementById('txtPreviewContainer');
   const txtPreviewContent = document.getElementById('txtPreviewContent');
   const btnCopyTxt = document.getElementById('btnCopyTxt');
+  const chkShowIdeContext = document.getElementById('chkShowIdeContext');
 
   // Delete Confirmation Modal Elements
   const deleteModal = document.getElementById('deleteModal');
@@ -109,8 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     viewMode = 'focus';
     btnFocusMode.classList.add('active');
     btnScrollMode.classList.remove('active');
-    btnPreviewCleanMode.classList.remove('active');
-    btnPreviewSuperCleanMode.classList.remove('active');
+    btnPreviewPureMode.classList.remove('active');
     
     paginationBar.style.display = 'flex';
     timeline.style.display = 'flex';
@@ -124,8 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     viewMode = 'scroll';
     btnScrollMode.classList.add('active');
     btnFocusMode.classList.remove('active');
-    btnPreviewCleanMode.classList.remove('active');
-    btnPreviewSuperCleanMode.classList.remove('active');
+    btnPreviewPureMode.classList.remove('active');
     
     paginationBar.style.display = 'none';
     timeline.style.display = 'flex';
@@ -134,43 +132,36 @@ document.addEventListener('DOMContentLoaded', () => {
     renderActiveSessionTimeline();
   });
 
-  btnPreviewCleanMode.addEventListener('click', () => {
-    if (viewMode === 'preview_clean') return;
-    viewMode = 'preview_clean';
-    btnPreviewCleanMode.classList.add('active');
+  btnPreviewPureMode.addEventListener('click', () => {
+    if (viewMode === 'preview') return;
+    viewMode = 'preview';
+    btnPreviewPureMode.classList.add('active');
     btnFocusMode.classList.remove('active');
     btnScrollMode.classList.remove('active');
-    btnPreviewSuperCleanMode.classList.remove('active');
     
     paginationBar.style.display = 'none';
     timeline.style.display = 'none';
     txtPreviewContainer.style.display = 'block';
     
-    loadPlainTextPreview('clean');
+    loadPlainTextPreview();
   });
 
-  btnPreviewSuperCleanMode.addEventListener('click', () => {
-    if (viewMode === 'preview_super_clean') return;
-    viewMode = 'preview_super_clean';
-    btnPreviewSuperCleanMode.classList.add('active');
-    btnFocusMode.classList.remove('active');
-    btnScrollMode.classList.remove('active');
-    btnPreviewCleanMode.classList.remove('active');
-    
-    paginationBar.style.display = 'none';
-    timeline.style.display = 'none';
-    txtPreviewContainer.style.display = 'block';
-    
-    loadPlainTextPreview('super_clean');
+  chkShowIdeContext.addEventListener('change', () => {
+    if (viewMode === 'preview') {
+      loadPlainTextPreview();
+    }
   });
 
-  async function loadPlainTextPreview(type = 'clean') {
+  async function loadPlainTextPreview() {
     if (!activeSessionId) return;
     txtPreviewContent.textContent = '正在获取对话文本内容...';
     
+    const showIde = chkShowIdeContext.checked;
+    const type = showIde ? 'clean' : 'super_clean';
+
     const previewFileName = document.getElementById('previewFileName');
     if (previewFileName) {
-      previewFileName.textContent = type === 'clean' ? 'dialogue_clean.txt' : 'dialogue_super_clean.txt';
+      previewFileName.textContent = showIde ? 'dialogue_clean.txt' : 'dialogue_super_clean.txt';
     }
 
     try {
@@ -384,16 +375,11 @@ document.addEventListener('DOMContentLoaded', () => {
         paginationBar.style.display = 'none';
         timeline.style.display = 'flex';
         txtPreviewContainer.style.display = 'none';
-      } else if (viewMode === 'preview_clean') {
+      } else if (viewMode === 'preview') {
         paginationBar.style.display = 'none';
         timeline.style.display = 'none';
         txtPreviewContainer.style.display = 'block';
-        loadPlainTextPreview('clean');
-      } else if (viewMode === 'preview_super_clean') {
-        paginationBar.style.display = 'none';
-        timeline.style.display = 'none';
-        txtPreviewContainer.style.display = 'block';
-        loadPlainTextPreview('super_clean');
+        loadPlainTextPreview();
       }
 
       renderSessionDetail(sessionData);
