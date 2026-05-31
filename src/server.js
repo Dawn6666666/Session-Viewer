@@ -62,7 +62,12 @@ function findFileRecursive(dir, filename) {
 export function startServer(port = 3000) {
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    const pathname = url.pathname;
+    let pathname = url.pathname;
+    try {
+      pathname = decodeURIComponent(pathname);
+    } catch (e) {
+      // Fallback in case of malformed URL encoding
+    }
 
     // --- API: List all processed sessions ---
     if (pathname === '/api/sessions' && req.method === 'GET') {
