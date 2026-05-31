@@ -8,12 +8,13 @@
     --bg-surface: #FFFFFF;      /* 纯白 */
     --bg-subtle: #F2F0E8;       /* 极淡暖灰 */
     --bg-code: #FBFBF9;         /* 代码块背景 */
-    --bg-terminal: #1C1C16;     /* 终端底色 (炭黑) */
+    --bg-terminal: #F5F3EB;     /* 优雅温润纸张深灰 (打字机底色) */
+    --border-terminal: #E3DFD4; /* 终端内框线 */
 
     --text-primary: #1C1C16;    /* 深炭黑 */
     --text-secondary: #5F5E5A;  /* 暖灰 */
     --text-tertiary: #8E8C85;   /* 浅灰 */
-    --text-terminal: #ECEBE6;   /* 终端白 */
+    --text-terminal: #3C3B37;   /* 温暖墨黑色 */
 
     --accent-primary: #D97757;  /* 陶土橘 */
     --accent-hover: #C15F3C;
@@ -50,12 +51,13 @@ body.dark-mode {
     --bg-surface: #242423;      /* 表面白 */
     --bg-subtle: #2C2C2B;       /* 交互区背景 */
     --bg-code: #222221;         /* 代码背景 */
-    --bg-terminal: #151515;
+    --bg-terminal: #1D1D1C;     /* 深色羊皮底色 */
+    --border-terminal: rgba(255, 255, 255, 0.08);
 
     --text-primary: #ECEBE6;    /* 暖白 */
     --text-secondary: #A1A09A;  /* 浅暖灰 */
     --text-tertiary: #6E6D69;   /* 深灰 */
-    --text-terminal: #ECEBE6;
+    --text-terminal: #DFDDD5;   /* 温暖亮灰 */
 
     --border-light: rgba(255, 255, 255, 0.07);
     --border-medium: rgba(255, 255, 255, 0.12);
@@ -867,15 +869,16 @@ nav {
 }
 .terminal-console {
     background: var(--bg-terminal);
-    border-radius: var(--radius-sm);
-    padding: 14px 18px;
+    border: 1px solid var(--border-terminal);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
     color: var(--text-terminal);
     font-family: var(--font-mono);
     font-size: 0.84rem;
     line-height: 1.6;
     overflow-x: auto;
     white-space: pre-wrap;
-    max-height: 250px;
+    max-height: 280px;
     overflow-y: auto;
 }
 
