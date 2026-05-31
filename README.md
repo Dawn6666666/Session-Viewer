@@ -116,4 +116,4 @@ node src/index.js <path_to_jsonl_file>
 
 ## 📜 开源协议
 
-ISC 协议。由 Antigravity 倾情打造。
+MIT 协议。
