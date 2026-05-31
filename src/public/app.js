@@ -639,6 +639,20 @@ document.addEventListener('DOMContentLoaded', () => {
           answerDiv.innerHTML = parseMarkdown(ans.text);
           codexGroup.appendChild(answerDiv);
         });
+      } else if (thinkingElements.length === 0 && (!turn.tools || turn.tools.length === 0)) {
+        // If there's absolutely no response (no thinking, no tools, no answers)
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'assistant-response empty-placeholder';
+        emptyDiv.style.fontStyle = 'italic';
+        emptyDiv.style.color = 'var(--text-tertiary)';
+        emptyDiv.style.opacity = '0.75';
+        emptyDiv.style.fontSize = '0.9rem';
+        emptyDiv.style.padding = '12px 16px';
+        emptyDiv.style.border = '1px dashed var(--border-light)';
+        emptyDiv.style.borderRadius = 'var(--radius-md)';
+        emptyDiv.style.background = 'var(--bg-subtle)';
+        emptyDiv.innerHTML = '<i data-lucide="info" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px; color: var(--text-tertiary)"></i> 此轮会话尚未收到 AI 的回复，或日志未记录到有效响应。';
+        codexGroup.appendChild(emptyDiv);
       }
 
       turnContainer.appendChild(codexGroup);
