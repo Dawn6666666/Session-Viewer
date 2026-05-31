@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // New Pagination & Controls Elements
   const btnFocusMode = document.getElementById('btnFocusMode');
   const btnScrollMode = document.getElementById('btnScrollMode');
-  const btnPreviewTxtMode = document.getElementById('btnPreviewTxtMode');
+  const btnPreviewCleanMode = document.getElementById('btnPreviewCleanMode');
+  const btnPreviewSuperCleanMode = document.getElementById('btnPreviewSuperCleanMode');
   const paginationBar = document.getElementById('paginationBar');
   const btnPrevTurn = document.getElementById('btnPrevTurn');
   const btnNextTurn = document.getElementById('btnNextTurn');
@@ -108,7 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
     viewMode = 'focus';
     btnFocusMode.classList.add('active');
     btnScrollMode.classList.remove('active');
-    btnPreviewTxtMode.classList.remove('active');
+    btnPreviewCleanMode.classList.remove('active');
+    btnPreviewSuperCleanMode.classList.remove('active');
     
     paginationBar.style.display = 'flex';
     timeline.style.display = 'flex';
@@ -122,7 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
     viewMode = 'scroll';
     btnScrollMode.classList.add('active');
     btnFocusMode.classList.remove('active');
-    btnPreviewTxtMode.classList.remove('active');
+    btnPreviewCleanMode.classList.remove('active');
+    btnPreviewSuperCleanMode.classList.remove('active');
     
     paginationBar.style.display = 'none';
     timeline.style.display = 'flex';
@@ -131,25 +134,47 @@ document.addEventListener('DOMContentLoaded', () => {
     renderActiveSessionTimeline();
   });
 
-  btnPreviewTxtMode.addEventListener('click', () => {
-    if (viewMode === 'preview') return;
-    viewMode = 'preview';
-    btnPreviewTxtMode.classList.add('active');
+  btnPreviewCleanMode.addEventListener('click', () => {
+    if (viewMode === 'preview_clean') return;
+    viewMode = 'preview_clean';
+    btnPreviewCleanMode.classList.add('active');
     btnFocusMode.classList.remove('active');
     btnScrollMode.classList.remove('active');
+    btnPreviewSuperCleanMode.classList.remove('active');
     
     paginationBar.style.display = 'none';
     timeline.style.display = 'none';
     txtPreviewContainer.style.display = 'block';
     
-    loadPlainTextPreview();
+    loadPlainTextPreview('clean');
   });
 
-  async function loadPlainTextPreview() {
+  btnPreviewSuperCleanMode.addEventListener('click', () => {
+    if (viewMode === 'preview_super_clean') return;
+    viewMode = 'preview_super_clean';
+    btnPreviewSuperCleanMode.classList.add('active');
+    btnFocusMode.classList.remove('active');
+    btnScrollMode.classList.remove('active');
+    btnPreviewCleanMode.classList.remove('active');
+    
+    paginationBar.style.display = 'none';
+    timeline.style.display = 'none';
+    txtPreviewContainer.style.display = 'block';
+    
+    loadPlainTextPreview('super_clean');
+  });
+
+  async function loadPlainTextPreview(type = 'clean') {
     if (!activeSessionId) return;
     txtPreviewContent.textContent = '正在获取对话文本内容...';
+    
+    const previewFileName = document.getElementById('previewFileName');
+    if (previewFileName) {
+      previewFileName.textContent = type === 'clean' ? 'dialogue_clean.txt' : 'dialogue_super_clean.txt';
+    }
+
     try {
-      const response = await fetch(`/api/preview/${activeSessionId}`);
+      const response = await fetch(`/api/preview/${type}/${activeSessionId}`);
       if (!response.ok) throw new Error('无法读取文件内容');
       const text = await response.text();
       txtPreviewContent.textContent = text;
@@ -359,11 +384,16 @@ document.addEventListener('DOMContentLoaded', () => {
         paginationBar.style.display = 'none';
         timeline.style.display = 'flex';
         txtPreviewContainer.style.display = 'none';
-      } else if (viewMode === 'preview') {
+      } else if (viewMode === 'preview_clean') {
         paginationBar.style.display = 'none';
         timeline.style.display = 'none';
         txtPreviewContainer.style.display = 'block';
-        loadPlainTextPreview();
+        loadPlainTextPreview('clean');
+      } else if (viewMode === 'preview_super_clean') {
+        paginationBar.style.display = 'none';
+        timeline.style.display = 'none';
+        txtPreviewContainer.style.display = 'block';
+        loadPlainTextPreview('super_clean');
       }
 
       renderSessionDetail(sessionData);

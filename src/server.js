@@ -156,12 +156,24 @@ export function startServer(port = 3000) {
       return fs.createReadStream(filePath).pipe(res);
     }
 
-    // --- API: Get preview of dialogue_clean.txt ---
+    // --- API: Get preview of dialogue text files ---
     if (pathname.startsWith('/api/preview/') && req.method === 'GET') {
-      const sessionId = pathname.split('/').pop();
-      const filePath = path.join(projectRootDir, 'outputs', sessionId, 'dialogue_clean.txt');
+      const parts = pathname.split('/');
+      let type = parts[parts.length - 2]; // 'clean' or 'super_clean'
+      let sessionId = parts[parts.length - 1];
       
-      if (!fs.existsSync(filePath)) {
+      let filePath = '';
+      if (type === 'clean') {
+        filePath = path.join(projectRootDir, 'outputs', sessionId, 'dialogue_clean.txt');
+      } else if (type === 'super_clean') {
+        filePath = path.join(projectRootDir, 'outputs', sessionId, 'dialogue_super_clean.txt');
+      } else {
+        // Backward compatibility for old single parameter: /api/preview/:sessionId
+        const oldSessionId = parts.pop();
+        filePath = path.join(projectRootDir, 'outputs', oldSessionId, 'dialogue_clean.txt');
+      }
+      
+      if (!filePath || !fs.existsSync(filePath)) {
         res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
         return res.end('Preview not found');
       }
