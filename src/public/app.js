@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let sessionsData = [];
   let activeSessionId = null;
   let isDarkMode = false;
+  
+  let viewMode = 'focus';        // 'focus' (Single-turn pagination) or 'scroll' (Infinite scroll timeline)
+  let currentTurnIndex = 0;      // 0-indexed turn indicator for Focus mode
+  let activeSessionTurns = [];   // Cached turns array of active session
 
   // Cache DOM Elements
   const body = document.body;
@@ -25,6 +29,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const uploadZone = document.getElementById('uploadZone');
   const fileInput = document.getElementById('fileInput');
+
+  // New Pagination & Controls Elements
+  const btnFocusMode = document.getElementById('btnFocusMode');
+  const btnScrollMode = document.getElementById('btnScrollMode');
+  const paginationBar = document.getElementById('paginationBar');
+  const btnPrevTurn = document.getElementById('btnPrevTurn');
+  const btnNextTurn = document.getElementById('btnNextTurn');
+  const currentTurnLabel = document.getElementById('currentTurnLabel');
 
   // Initialize Lucide Icons
   lucide.createIcons();
@@ -57,7 +69,63 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================================================
-  // 2. Fetch and Render Session List
+  // 2. View Mode (Focus vs Scroll) & Pagination Handlers
+  // ==========================================================================
+  btnFocusMode.addEventListener('click', () => {
+    if (viewMode === 'focus') return;
+    viewMode = 'focus';
+    btnFocusMode.classList.add('active');
+    btnScrollMode.classList.remove('active');
+    paginationBar.style.display = 'flex';
+    renderActiveSessionTimeline();
+  });
+
+  btnScrollMode.addEventListener('click', () => {
+    if (viewMode === 'scroll') return;
+    viewMode = 'scroll';
+    btnScrollMode.classList.add('active');
+    btnFocusMode.classList.remove('active');
+    paginationBar.style.display = 'none';
+    renderActiveSessionTimeline();
+  });
+
+  btnPrevTurn.addEventListener('click', () => {
+    if (currentTurnIndex > 0) {
+      currentTurnIndex--;
+      renderActiveSessionTimeline();
+    }
+  });
+
+  btnNextTurn.addEventListener('click', () => {
+    if (currentTurnIndex < activeSessionTurns.length - 1) {
+      currentTurnIndex++;
+      renderActiveSessionTimeline();
+    }
+  });
+
+  // Global Keyboard Navigation Shortcuts (← and →)
+  document.addEventListener('keydown', (e) => {
+    // Avoid interfering when user is searching or typing in a field
+    if (document.activeElement === searchInput) return;
+    if (!activeSessionTurns || activeSessionTurns.length === 0 || viewMode !== 'focus') return;
+
+    if (e.key === 'ArrowLeft') {
+      if (currentTurnIndex > 0) {
+        currentTurnIndex--;
+        renderActiveSessionTimeline();
+        e.preventDefault();
+      }
+    } else if (e.key === 'ArrowRight') {
+      if (currentTurnIndex < activeSessionTurns.length - 1) {
+        currentTurnIndex++;
+        renderActiveSessionTimeline();
+        e.preventDefault();
+      }
+    }
+  });
+
+  // ==========================================================================
+  // 3. Fetch and Render Session List
   // ==========================================================================
   async function loadSessions(selectId = null) {
     try {
@@ -145,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================================================
-  // 3. Selection & Rendering of a Specific Session Dialogue Timeline
+  // 4. Selection & Setup of Active Session Data
   // ==========================================================================
   async function selectSession(id) {
     activeSessionId = id;
@@ -172,6 +240,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) throw new Error('无法读取会话详情');
       
       const sessionData = await response.json();
+      
+      // Store session turns globally for pagination
+      activeSessionTurns = sessionData.turns || [];
+      currentTurnIndex = 0;
+
+      // Handle visibility of pagination bar
+      if (viewMode === 'focus') {
+        paginationBar.style.display = 'flex';
+      } else {
+        paginationBar.style.display = 'none';
+      }
+
       renderSessionDetail(sessionData);
     } catch (err) {
       timeline.innerHTML = `
@@ -185,12 +265,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderSessionDetail(data) {
-    const { fileBaseName, turns, uniqueToolsCount } = data;
+    const { fileBaseName, uniqueToolsCount } = data;
     
     // Header details
     sessionTitle.textContent = fileBaseName;
     sessionTitle.setAttribute('title', fileBaseName);
-    sessionTurnsCount.textContent = `${turns.length} 轮对话`;
+    sessionTurnsCount.textContent = `${activeSessionTurns.length} 轮对话`;
     sessionToolsCount.textContent = `${uniqueToolsCount || 0} 次工具调用`;
     
     // Find matching session in data to show file date and size
@@ -198,17 +278,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateStr = sessionMeta?.date ? new Date(sessionMeta.date).toLocaleString('zh-CN') : '未知日期';
     sessionDetails.textContent = `会话分析完成时间: ${dateStr}`;
 
-    // Clear and build dialogue turns
+    // Render active dialog timeline
+    renderActiveSessionTimeline();
+  }
+
+  // ==========================================================================
+  // 5. Draw dialogue turns (Supporting Scroll / Focus Left-Right split chat)
+  // ==========================================================================
+  function renderActiveSessionTimeline() {
+    if (!activeSessionTurns || activeSessionTurns.length === 0) {
+      timeline.innerHTML = '<div class="loading-state">本会话无对话内容</div>';
+      return;
+    }
+
+    // Scroll back to top on re-draws for a fresh reading flow
+    workspace.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Clear timeline view
     timeline.innerHTML = '';
 
-    turns.forEach((turn, idx) => {
-      const turnNum = idx + 1;
+    // Decide which turns to render based on the active viewMode
+    let turnsToRender = [];
+    if (viewMode === 'focus') {
+      turnsToRender = [activeSessionTurns[currentTurnIndex]];
+      
+      // Update pagination indicators
+      currentTurnLabel.textContent = `第 ${currentTurnIndex + 1} / ${activeSessionTurns.length} 轮`;
+      btnPrevTurn.disabled = currentTurnIndex === 0;
+      btnNextTurn.disabled = currentTurnIndex === activeSessionTurns.length - 1;
+    } else {
+      turnsToRender = activeSessionTurns;
+    }
+
+    // Draw the turns
+    turnsToRender.forEach((turn, idx) => {
+      // Find the absolute turn index in the global conversation list
+      const absoluteIndex = viewMode === 'focus' ? currentTurnIndex : idx;
+      const turnNum = absoluteIndex + 1;
+
       const turnContainer = document.createElement('div');
       turnContainer.className = 'turn';
 
-      // 1. User Message Block
-      const userDiv = document.createElement('div');
-      userDiv.className = 'user-block';
+      // --------------------------------------------------
+      // 5.a User Column (Aligned to Right - clay terracotta)
+      // --------------------------------------------------
+      const userGroup = document.createElement('div');
+      userGroup.className = 'user-turn-group';
+
+      // User role header
+      const timeStr = formatTime(turn.timestamp);
+      const userHeader = document.createElement('div');
+      userHeader.className = 'turn-role-header';
+      userHeader.innerHTML = `<i data-lucide="user" class="role-icon"></i><span>User [第 ${turnNum} 轮] [${timeStr}]</span>`;
+      userGroup.appendChild(userHeader);
+
+      // User Bubble block
+      const userBlock = document.createElement('div');
+      userBlock.className = 'user-block';
 
       // Parse user message context metadata
       const hasIde = turn.user.text.match(/## Active file:\s*(.*)/i) || turn.user.text.match(/# Context from my IDE setup:/i);
@@ -238,31 +364,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Add USER Role Header
-      const timeStr = formatTime(turn.timestamp);
-      const userHeader = document.createElement('div');
-      userHeader.className = 'turn-role-header';
-      userHeader.innerHTML = `<i data-lucide="user" class="role-icon"></i><span>User [第 ${turnNum} 轮] [${timeStr}]</span>`;
-      turnContainer.appendChild(userHeader);
-
-      // Build User Content Card
       let userContextHtml = '';
       if (hasIde && (activeFile || openTabs.length > 0)) {
         userContextHtml = `
           <div class="user-ide-context">
-            ${activeFile ? `<div class="ide-context-row"><span class="ide-context-label">活动文件:</span><span class="ide-context-value">${activeFile}</span></div>` : ''}
-            ${openTabs.length > 0 ? `<div class="ide-context-row"><span class="ide-context-label">已打开标签:</span><span class="ide-context-value">${openTabs.join(', ')}</span></div>` : ''}
+            ${activeFile ? `<div class="ide-context-row"><span class="ide-context-label">活动文件:</span><span class="ide-context-value" title="${activeFile}">${activeFile}</span></div>` : ''}
+            ${openTabs.length > 0 ? `<div class="ide-context-row"><span class="ide-context-label">已开标签:</span><span class="ide-context-value" title="${openTabs.join(', ')}">${openTabs.join(', ')}</span></div>` : ''}
           </div>
         `;
       }
 
-      userDiv.innerHTML = `
+      userBlock.innerHTML = `
         ${userContextHtml}
         <div class="user-query">${escapeHtml(queryClean)}</div>
       `;
-      turnContainer.appendChild(userDiv);
+      userGroup.appendChild(userBlock);
+      turnContainer.appendChild(userGroup);
 
-      // 2. Interim Thinking Commentary (if any)
+      // --------------------------------------------------
+      // 5.b Codex Response Column (Aligned to Left - paper white)
+      // --------------------------------------------------
+      const codexGroup = document.createElement('div');
+      codexGroup.className = 'codex-turn-group';
+
+      // Assistant role header
+      const asstHeader = document.createElement('div');
+      asstHeader.className = 'turn-role-header';
+      asstHeader.innerHTML = `<i data-lucide="bot" class="role-icon"></i><span>Codex Response</span>`;
+      codexGroup.appendChild(asstHeader);
+
+      // 2.a Interim Thinking Commentary (if any)
       const thinkingElements = turn.assistantElements.filter(asst => asst.phase === 'commentary');
       if (thinkingElements.length > 0) {
         const thinkingDiv = document.createElement('div');
@@ -286,10 +417,10 @@ document.addEventListener('DOMContentLoaded', () => {
           thinkingDiv.classList.toggle('expanded');
         });
 
-        turnContainer.appendChild(thinkingDiv);
+        codexGroup.appendChild(thinkingDiv);
       }
 
-      // 3. Intermediate Actions (Tool Executions)
+      // 2.b Intermediate Actions (Tool Executions)
       if (turn.tools && turn.tools.length > 0) {
         const toolsListDiv = document.createElement('div');
         toolsListDiv.className = 'tools-execution-list';
@@ -352,38 +483,32 @@ document.addEventListener('DOMContentLoaded', () => {
           toolsListDiv.appendChild(toolItem);
         });
 
-        turnContainer.appendChild(toolsListDiv);
+        codexGroup.appendChild(toolsListDiv);
       }
 
-      // 4. Codex Final Answers
+      // 2.c Codex Final Answers
       const answerElements = turn.assistantElements.filter(asst => asst.phase !== 'commentary');
       if (answerElements.length > 0) {
-        // Assistant role header
-        const asstHeader = document.createElement('div');
-        asstHeader.className = 'turn-role-header';
-        asstHeader.innerHTML = `<i data-lucide="bot" class="role-icon"></i><span>Codex Response</span>`;
-        turnContainer.appendChild(asstHeader);
-
         answerElements.forEach(ans => {
           const answerDiv = document.createElement('div');
           answerDiv.className = 'assistant-response';
           
           // Render Markdown
           answerDiv.innerHTML = marked.parse(ans.text);
-          turnContainer.appendChild(answerDiv);
+          codexGroup.appendChild(answerDiv);
         });
       }
 
-      // Append Turn card to timeline
+      turnContainer.appendChild(codexGroup);
       timeline.appendChild(turnContainer);
     });
 
-    // Add Article minimal Footer
+    // Add minimal Footer
     const footer = document.createElement('div');
     footer.className = 'article-footer';
     footer.innerHTML = `
       <span>由 Codex & Antigravity 克制呈现</span>
-      <span>© 2026 Claude Restraint System</span>
+      <span>© 2026 Claude Rester Theme</span>
     `;
     timeline.appendChild(footer);
 
@@ -408,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // 4. Drag & Drop File Upload Handler
+  // 6. Drag & Drop File Upload Handler
   // ==========================================================================
   
   // Prevent defaults on drag events

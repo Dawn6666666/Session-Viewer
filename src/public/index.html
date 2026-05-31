@@ -101,6 +101,34 @@
                     </div>
                 </header>
 
+                <!-- Control Panel (View Mode & Pagination) -->
+                <div class="session-controls" id="sessionControls">
+                    <!-- View Mode Selector -->
+                    <div class="view-mode-selector">
+                        <button class="view-mode-btn active" id="btnFocusMode">
+                            <i data-lucide="eye" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                            聚焦单轮
+                        </button>
+                        <button class="view-mode-btn" id="btnScrollMode">
+                            <i data-lucide="menu" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                            时间线滚动
+                        </button>
+                    </div>
+
+                    <!-- Pagination Controller -->
+                    <div class="pagination-bar" id="paginationBar">
+                        <button class="btn btn-nav" id="btnPrevTurn" title="上一轮 (← 方向键)">
+                            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
+                        </button>
+                        <div class="pagination-indicator">
+                            <span id="currentTurnLabel">第 1 / 1 轮</span>
+                        </div>
+                        <button class="btn btn-nav" id="btnNextTurn" title="下一轮 (→ 方向键)">
+                            <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Conversation Timeline (Max width: 740px) -->
                 <div class="timeline" id="timeline">
                     <!-- Turns will be dynamically inserted here -->
