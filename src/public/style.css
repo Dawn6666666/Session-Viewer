@@ -964,3 +964,33 @@ nav {
     display: flex;
     justify-content: space-between;
 }
+
+/* Sidebar Delete Button styling */
+.btn-delete-session {
+    background: transparent;
+    border: none;
+    padding: 4px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+.btn-delete-session:hover {
+    background: var(--accent-faint) !important;
+    color: var(--accent-primary) !important;
+}
+
+/* Sidebar Item Header Row */
+.session-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+.session-item-title {
+    flex: 1;
+}

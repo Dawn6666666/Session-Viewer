@@ -1,6 +1,7 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import { resolveConfig } from './config.js';
 import { parseLogFile } from './parser/logParser.js';
@@ -21,6 +22,38 @@ const MIME_TYPES = {
   '.png': 'image/png',
   '.ico': 'image/x-icon',
 };
+
+/**
+ * Recursively find a file with exact filename in a directory.
+ * @param {string} dir - Directory to search in
+ * @param {string} filename - Filename to find
+ * @returns {string|null} Full path of the found file, or null
+ */
+function findFileRecursive(dir, filename) {
+  if (!fs.existsSync(dir)) return null;
+  let items = [];
+  try {
+    items = fs.readdirSync(dir);
+  } catch (e) {
+    return null;
+  }
+  for (const item of items) {
+    const fullPath = path.join(dir, item);
+    let stat;
+    try {
+      stat = fs.statSync(fullPath);
+    } catch (e) {
+      continue; // Skip inaccessible paths
+    }
+    if (stat.isDirectory()) {
+      const found = findFileRecursive(fullPath, filename);
+      if (found) return found;
+    } else if (item === filename) {
+      return fullPath;
+    }
+  }
+  return null;
+}
 
 /**
  * Boots the lightweight HTTP server.
@@ -188,7 +221,7 @@ export function startServer(port = 3000) {
           // Save structured session.json for the frontend client
           fs.writeFileSync(
             path.join(config.sessionOutputDir, 'session.json'),
-            JSON.stringify({ events, turns, uniqueToolsCount, fileBaseName: config.fileBaseName }, null, 2),
+            JSON.stringify({ events, turns, uniqueToolsCount, fileBaseName: config.fileBaseName, targetFilePath: null }, null, 2),
             'utf-8'
           );
 
@@ -212,6 +245,83 @@ export function startServer(port = 3000) {
       req.on('error', (err) => {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
+      });
+      return;
+    }
+
+    // --- API: Delete session (and optionally local file) ---
+    if (pathname === '/api/delete' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        try {
+          const { sessionId, deleteSource } = JSON.parse(body);
+          if (!sessionId) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Missing sessionId' }));
+          }
+
+          const sessionDir = path.join(projectRootDir, 'outputs', sessionId);
+          const jsonPath = path.join(sessionDir, 'session.json');
+          
+          let targetFilePath = null;
+          if (fs.existsSync(jsonPath)) {
+            try {
+              const sessionData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+              targetFilePath = sessionData.targetFilePath || null;
+            } catch (e) {
+              // Ignore parse errors
+            }
+          }
+
+          let deletedSource = false;
+          let sourceDeletedPath = null;
+
+          if (deleteSource) {
+            // 1. Try saved targetFilePath
+            if (targetFilePath && fs.existsSync(targetFilePath)) {
+              try {
+                fs.unlinkSync(targetFilePath);
+                deletedSource = true;
+                sourceDeletedPath = targetFilePath;
+              } catch (err) {
+                console.error(`Failed to delete original file at ${targetFilePath}:`, err.message);
+              }
+            }
+
+            // 2. Fallback recursive search under os.homedir()/.codex/sessions
+            if (!deletedSource) {
+              const searchDir = path.join(os.homedir(), '.codex', 'sessions');
+              const foundPath = findFileRecursive(searchDir, `${sessionId}.jsonl`);
+              if (foundPath && fs.existsSync(foundPath)) {
+                try {
+                  fs.unlinkSync(foundPath);
+                  deletedSource = true;
+                  sourceDeletedPath = foundPath;
+                } catch (err) {
+                  console.error(`Failed to delete searched original file at ${foundPath}:`, err.message);
+                }
+              }
+            }
+          }
+
+          // Delete the entire outputs/sessionId folder recursively
+          if (fs.existsSync(sessionDir)) {
+            fs.rmSync(sessionDir, { recursive: true, force: true });
+          }
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            success: true, 
+            deletedSource, 
+            sourceDeletedPath 
+          }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
       });
       return;
     }

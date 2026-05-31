@@ -49,7 +49,7 @@ async function main() {
     // Save structured session.json for the web server frontend
     fs.writeFileSync(
       path.join(config.sessionOutputDir, 'session.json'),
-      JSON.stringify({ events, turns, uniqueToolsCount, fileBaseName: config.fileBaseName }, null, 2),
+      JSON.stringify({ events, turns, uniqueToolsCount, fileBaseName: config.fileBaseName, targetFilePath: config.targetFilePath }, null, 2),
       'utf-8'
     );
     

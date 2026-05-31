@@ -44,6 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const txtPreviewContent = document.getElementById('txtPreviewContent');
   const btnCopyTxt = document.getElementById('btnCopyTxt');
 
+  // Delete Confirmation Modal Elements
+  const deleteModal = document.getElementById('deleteModal');
+  const deleteModalMessage = document.getElementById('deleteModalMessage');
+  const chkDeleteSource = document.getElementById('chkDeleteSource');
+  const btnCloseDeleteModal = document.getElementById('btnCloseDeleteModal');
+  const btnCancelDelete = document.getElementById('btnCancelDelete');
+  const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+  let sessionToDelete = null;
+
   // Initialize Lucide Icons
   lucide.createIcons();
 
@@ -252,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         month: 'numeric', day: 'numeric', hour: '2-digit', minute:'2-digit'
       }) : '未知时间';
 
-      const item = document.createElement('button');
+      const item = document.createElement('div');
       item.className = 'session-item';
       item.setAttribute('data-id', session.id);
       if (activeSessionId === session.id) {
@@ -260,7 +269,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       item.innerHTML = `
-        <span class="session-item-title" title="${session.id}">${session.id}</span>
+        <div class="session-item-header">
+          <span class="session-item-title" title="${session.id}">${session.id}</span>
+          <button class="btn-delete-session" title="删除会话">
+            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+          </button>
+        </div>
         <div class="session-item-meta">
           <span class="session-item-meta-item">
             <i data-lucide="calendar" style="width: 12px; height: 12px;"></i>
@@ -276,6 +290,14 @@ document.addEventListener('DOMContentLoaded', () => {
           </span>
         </div>
       `;
+
+      // Handle delete button click separately with event propagation stop
+      const deleteBtn = item.querySelector('.btn-delete-session');
+      deleteBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openDeleteConfirmation(session.id);
+      });
 
       item.addEventListener('click', () => selectSession(session.id));
       sessionListContainer.appendChild(item);
@@ -738,6 +760,87 @@ document.addEventListener('DOMContentLoaded', () => {
       loadSessions(activeSessionId); // Restore list
     }
   }
+
+  // ==========================================================================
+  // 7. Delete Confirmation Modal Handlers & Logic
+  // ==========================================================================
+  function openDeleteConfirmation(sessionId) {
+    sessionToDelete = sessionId;
+    deleteModalMessage.innerHTML = `确定要从系统中删除会话 <strong>${sessionId}</strong> 及其所有导出的文本分析日志吗？`;
+    chkDeleteSource.checked = false; // Reset checkbox
+    deleteModal.style.display = 'flex';
+  }
+
+  function closeDeleteModal() {
+    deleteModal.style.display = 'none';
+    sessionToDelete = null;
+  }
+
+  btnCloseDeleteModal.addEventListener('click', closeDeleteModal);
+  btnCancelDelete.addEventListener('click', closeDeleteModal);
+
+  // Close modal when clicking outside the modal content wrapper
+  deleteModal.addEventListener('click', (e) => {
+    if (e.target === deleteModal) {
+      closeDeleteModal();
+    }
+  });
+
+  btnConfirmDelete.addEventListener('click', async () => {
+    if (!sessionToDelete) return;
+
+    const deleteSource = chkDeleteSource.checked;
+    
+    // Disable buttons and show loading state
+    btnConfirmDelete.disabled = true;
+    btnCancelDelete.disabled = true;
+    btnConfirmDelete.textContent = '正在删除...';
+
+    try {
+      const response = await fetch('/api/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: sessionToDelete,
+          deleteSource: deleteSource
+        })
+      });
+
+      if (!response.ok) throw new Error('删除失败');
+
+      const result = await response.json();
+      
+      // Close the modal
+      closeDeleteModal();
+
+      // Show alert on source file deletion if occurred
+      if (deleteSource && result.deletedSource) {
+        alert(`会话及其本地原始日志文件已成功彻底删除！\n删除路径: ${result.sourceDeletedPath}`);
+      } else if (deleteSource && !result.deletedSource) {
+        alert('会话已删除，但未能找到或删除本地原始日志文件（可能由于它已被手动移动或删除，或是从网页直接上传）。');
+      }
+
+      // If the deleted session was the currently active session, return to empty state
+      if (activeSessionId === sessionToDelete) {
+        activeSessionId = null;
+        activeSessionTurns = [];
+        emptyState.style.display = 'flex';
+        sessionView.style.display = 'none';
+      }
+
+      // Reload the session list
+      await loadSessions();
+
+    } catch (err) {
+      alert(`删除会话失败: ${err.message}`);
+    } finally {
+      btnConfirmDelete.disabled = false;
+      btnCancelDelete.disabled = false;
+      btnConfirmDelete.textContent = '确认删除';
+    }
+  });
 
   // Initial Load Trigger
   loadSessions();

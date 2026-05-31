@@ -158,6 +158,31 @@
         </main>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(25, 25, 24, 0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 2000;">
+        <div class="artifact" style="width: 440px; max-width: 90%; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; margin: auto;">
+            <div class="artifact-header" style="padding: 12px 20px;">
+                <span style="font-weight: 600;">确认删除会话</span>
+                <button id="btnCloseDeleteModal" style="background: transparent; border: none; padding: 2px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center;">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            <div style="padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+                <p style="margin: 0; font-size: 0.95rem; color: var(--text-primary); line-height: 1.6;" id="deleteModalMessage">
+                    确定要从系统中删除该会话及其所有导出的文本分析日志吗？
+                </p>
+                <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; color: var(--text-secondary); user-select: none; margin: 4px 0 8px;">
+                    <input type="checkbox" id="chkDeleteSource" style="accent-color: var(--accent-primary); width: 16px; height: 16px; cursor: pointer;">
+                    <span>同时一键彻底删除本地原始 <code>.jsonl</code> 日志文件</span>
+                </label>
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <button class="btn" id="btnCancelDelete" style="height: 36px; font-size: 0.82rem; padding: 0 14px;">取消</button>
+                    <button class="btn btn-primary" id="btnConfirmDelete" style="background: var(--accent-primary); border-color: var(--accent-primary); height: 36px; font-size: 0.82rem; padding: 0 14px;">确认删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Application Script -->
     <script src="app.js?v=2" type="module"></script>
 </body>
