@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
       userGroup.style.alignSelf = 'flex-end';
       userGroup.style.marginLeft = 'auto';
       userGroup.style.marginRight = '0';
-      userGroup.style.maxWidth = '80%';
+      userGroup.style.maxWidth = '75%';
 
       // User role header
       const timeStr = formatTime(turn.timestamp);

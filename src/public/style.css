@@ -421,18 +421,16 @@ nav {
 /* Session Active Container */
 .session-view {
     width: 100%;
-    margin: 0 auto;
-    padding: 60px 0 100px;
+    padding: 40px 48px 100px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
 }
 
 /* Editorial Title Header */
 .session-header {
     width: 100%;
-    max-width: var(--content-width);
-    padding: 0 24px 32px;
+    padding: 0 0 32px;
     border-bottom: 1px solid var(--border-medium);
     margin-bottom: 32px;
 }
@@ -468,8 +466,7 @@ nav {
 /* Control Panel (View Mode & Pagination) */
 .session-controls {
     width: 100%;
-    max-width: var(--content-width);
-    padding: 0 24px;
+    padding: 0;
     margin-bottom: 32px;
     display: flex;
     justify-content: space-between;
@@ -564,8 +561,7 @@ nav {
 /* Conversation timeline */
 .timeline {
     width: 100%;
-    max-width: var(--content-width);
-    padding: 0 24px;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 32px;
@@ -586,7 +582,7 @@ nav {
     align-self: flex-end;
     margin-left: auto;
     margin-right: 0;
-    max-width: 80%;
+    max-width: 75%;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -597,7 +593,7 @@ nav {
 .codex-turn-group {
     margin-right: auto;
     margin-left: 0;
-    max-width: 90%;
+    max-width: 85%;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
