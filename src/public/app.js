@@ -39,11 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnNextTurn = document.getElementById('btnNextTurn');
   const currentTurnLabel = document.getElementById('currentTurnLabel');
 
-  // Text Preview elements
-  const txtPreviewContainer = document.getElementById('txtPreviewContainer');
-  const txtPreviewContent = document.getElementById('txtPreviewContent');
-  const btnCopyTxt = document.getElementById('btnCopyTxt');
+  // Pure Mode Controls elements
+  const pureModeControls = document.getElementById('pureModeControls');
   const chkShowIdeContext = document.getElementById('chkShowIdeContext');
+  const btnCopyPureTxt = document.getElementById('btnCopyPureTxt');
 
   // Delete Confirmation Modal Elements
   const deleteModal = document.getElementById('deleteModal');
@@ -112,8 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPreviewPureMode.classList.remove('active');
     
     paginationBar.style.display = 'flex';
+    pureModeControls.style.display = 'none';
     timeline.style.display = 'flex';
-    txtPreviewContainer.style.display = 'none';
     
     renderActiveSessionTimeline();
   });
@@ -126,8 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPreviewPureMode.classList.remove('active');
     
     paginationBar.style.display = 'none';
+    pureModeControls.style.display = 'none';
     timeline.style.display = 'flex';
-    txtPreviewContainer.style.display = 'none';
     
     renderActiveSessionTimeline();
   });
@@ -140,60 +139,58 @@ document.addEventListener('DOMContentLoaded', () => {
     btnScrollMode.classList.remove('active');
     
     paginationBar.style.display = 'none';
-    timeline.style.display = 'none';
-    txtPreviewContainer.style.display = 'block';
+    pureModeControls.style.display = 'flex';
+    timeline.style.display = 'flex';
     
-    loadPlainTextPreview();
+    renderActiveSessionTimeline();
   });
 
   chkShowIdeContext.addEventListener('change', () => {
     if (viewMode === 'preview') {
-      loadPlainTextPreview();
+      renderActiveSessionTimeline();
     }
   });
 
-  async function loadPlainTextPreview() {
+  btnCopyPureTxt.addEventListener('click', async () => {
     if (!activeSessionId) return;
-    txtPreviewContent.textContent = '正在获取对话文本内容...';
-    
     const showIde = chkShowIdeContext.checked;
     const type = showIde ? 'clean' : 'super_clean';
-
-    const previewFileName = document.getElementById('previewFileName');
-    if (previewFileName) {
-      previewFileName.textContent = showIde ? 'dialogue_clean.txt' : 'dialogue_super_clean.txt';
-    }
+    
+    const originalHtml = btnCopyPureTxt.innerHTML;
+    btnCopyPureTxt.disabled = true;
+    btnCopyPureTxt.innerHTML = '<i data-lucide="loader-2" style="width: 12px; height: 12px; margin-right: 4px; display: inline-block; vertical-align: middle;"></i> 正在读取...';
+    lucide.createIcons({
+      attrs: { class: 'lucide' },
+      nameAttr: 'data-lucide',
+      nodeList: btnCopyPureTxt.querySelectorAll('[data-lucide]')
+    });
 
     try {
       const response = await fetch(`/api/preview/${type}/${activeSessionId}`);
       if (!response.ok) throw new Error('无法读取文件内容');
       const text = await response.text();
-      txtPreviewContent.textContent = text;
+      
+      await navigator.clipboard.writeText(text);
+      btnCopyPureTxt.innerHTML = '<i data-lucide="check" style="width: 12px; height: 12px; margin-right: 4px; display: inline-block; vertical-align: middle;"></i> 已复制!';
     } catch (err) {
-      txtPreviewContent.textContent = `加载预览失败: ${err.message}`;
-    }
-  }
-
-  btnCopyTxt.addEventListener('click', () => {
-    const textToCopy = txtPreviewContent.textContent;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      const originalHtml = btnCopyTxt.innerHTML;
-      btnCopyTxt.innerHTML = '<i data-lucide="check" style="width: 12px; height: 12px; margin-right: 4px;"></i> 已复制!';
+      alert(`复制失败: ${err.message}`);
+      btnCopyPureTxt.innerHTML = originalHtml;
+    } finally {
+      btnCopyPureTxt.disabled = false;
       lucide.createIcons({
         attrs: { class: 'lucide' },
         nameAttr: 'data-lucide',
-        nodeList: btnCopyTxt.querySelectorAll('[data-lucide]')
+        nodeList: btnCopyPureTxt.querySelectorAll('[data-lucide]')
       });
       setTimeout(() => {
-        btnCopyTxt.innerHTML = originalHtml;
+        btnCopyPureTxt.innerHTML = originalHtml;
         lucide.createIcons({
           attrs: { class: 'lucide' },
           nameAttr: 'data-lucide',
-          nodeList: btnCopyTxt.querySelectorAll('[data-lucide]')
+          nodeList: btnCopyPureTxt.querySelectorAll('[data-lucide]')
         });
       }, 2000);
-    }).catch(err => {
-      alert('复制失败，请手动选择复制。');
+    }
     });
   });
 
@@ -369,17 +366,16 @@ document.addEventListener('DOMContentLoaded', () => {
       // Handle visibility of pagination bar and containers based on active mode
       if (viewMode === 'focus') {
         paginationBar.style.display = 'flex';
+        pureModeControls.style.display = 'none';
         timeline.style.display = 'flex';
-        txtPreviewContainer.style.display = 'none';
       } else if (viewMode === 'scroll') {
         paginationBar.style.display = 'none';
+        pureModeControls.style.display = 'none';
         timeline.style.display = 'flex';
-        txtPreviewContainer.style.display = 'none';
       } else if (viewMode === 'preview') {
         paginationBar.style.display = 'none';
-        timeline.style.display = 'none';
-        txtPreviewContainer.style.display = 'block';
-        loadPlainTextPreview();
+        pureModeControls.style.display = 'flex';
+        timeline.style.display = 'flex';
       }
 
       renderSessionDetail(sessionData);
@@ -523,7 +519,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       let userContextHtml = '';
-      if (hasIde && (activeFile || openTabs.length > 0)) {
+      const showIde = viewMode !== 'preview' || chkShowIdeContext.checked;
+      if (showIde && hasIde && (activeFile || openTabs.length > 0)) {
         userContextHtml = `
           <div class="user-ide-context">
             ${activeFile ? `<div class="ide-context-row"><span class="ide-context-label">活动文件:</span><span class="ide-context-value" title="${activeFile}">${activeFile}</span></div>` : ''}
@@ -553,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 2.a Interim Thinking Commentary (if any)
       const thinkingElements = turn.assistantElements.filter(asst => asst.phase === 'commentary');
-      if (thinkingElements.length > 0) {
+      if (viewMode !== 'preview' && thinkingElements.length > 0) {
         const thinkingDiv = document.createElement('div');
         thinkingDiv.className = 'thinking-block';
         
@@ -579,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 2.b Intermediate Actions (Tool Executions)
-      if (turn.tools && turn.tools.length > 0) {
+      if (viewMode !== 'preview' && turn.tools && turn.tools.length > 0) {
         const toolsListDiv = document.createElement('div');
         toolsListDiv.className = 'tools-execution-list';
 
@@ -655,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
           answerDiv.innerHTML = parseMarkdown(ans.text);
           codexGroup.appendChild(answerDiv);
         });
-      } else if (thinkingElements.length === 0 && (!turn.tools || turn.tools.length === 0)) {
+      } else if (viewMode === 'preview' || (thinkingElements.length === 0 && (!turn.tools || turn.tools.length === 0))) {
         // If there's absolutely no response (no thinking, no tools, no answers)
         const emptyDiv = document.createElement('div');
         emptyDiv.className = 'assistant-response empty-placeholder';
