@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs';
 import { resolveConfig } from './config.js';
 import { parseLogFile } from './parser/logParser.js';
 import { writeDialogueOutputs } from './writers/dialogueWriter.js';
@@ -11,7 +12,7 @@ async function main() {
   
   console.log(`🤖 File Selected: ${path.basename(config.targetFilePath)}`);
   console.log(`📏 Size: ${config.sizeMB.toFixed(2)} MB`);
-  console.log(`📂 Output Directory: ${config.fileDir}`);
+  console.log(`📂 Output Directory: ${config.sessionOutputDir}`);
   console.log(`⌛ Parsing and extracting conversation logs...`);
 
   try {
@@ -22,6 +23,11 @@ async function main() {
     console.log(`📊 Found ${turns.length} user-AI dialogue turns.`);
     console.log(`🛠️ Found ${uniqueToolsCount} unique tool execution steps.`);
     
+    // Ensure dedicated output directory exists
+    if (!fs.existsSync(config.sessionOutputDir)) {
+      fs.mkdirSync(config.sessionOutputDir, { recursive: true });
+    }
+
     // Write formatted output files
     writeDialogueOutputs(turns, config);
     writeFullHistoryOutput(events, config);

@@ -4,6 +4,7 @@
 *_dialogue_super_clean.txt
 *_full_history.txt
 *_split_turns/
+outputs/
 
 # OS files
 .DS_Store

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const DEFAULT_FILE = "rollout-2026-05-19T10-55-15-019e3e28-b5ac-7972-84b9-0ddcfcd41e54.jsonl";
 const TRUNCATE_LINES = 60; // Max lines to display in tool output
@@ -50,16 +51,24 @@ export function resolveConfig(cliArg) {
   const stats = fs.statSync(targetFilePath);
   const sizeMB = stats.size / (1024 * 1024);
 
+  // Compute the project root directory and session dedicated outputs folder
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const projectRootDir = path.resolve(__dirname, '..');
+  const sessionOutputDir = path.join(projectRootDir, 'outputs', fileBaseName);
+
   return {
     targetFilePath,
     fileDir,
     fileBaseName,
     sizeMB,
     truncateLines: TRUNCATE_LINES,
+    // Dedicated output directory
+    sessionOutputDir,
     // Output paths
-    cleanDialoguePath: path.join(fileDir, `${fileBaseName}_dialogue_clean.txt`),
-    superCleanDialoguePath: path.join(fileDir, `${fileBaseName}_dialogue_super_clean.txt`),
-    fullHistoryPath: path.join(fileDir, `${fileBaseName}_full_history.txt`),
-    splitTurnsDir: path.join(fileDir, `${fileBaseName}_split_turns`),
+    cleanDialoguePath: path.join(sessionOutputDir, 'dialogue_clean.txt'),
+    superCleanDialoguePath: path.join(sessionOutputDir, 'dialogue_super_clean.txt'),
+    fullHistoryPath: path.join(sessionOutputDir, 'full_history.txt'),
+    splitTurnsDir: path.join(sessionOutputDir, 'split_turns'),
   };
 }
