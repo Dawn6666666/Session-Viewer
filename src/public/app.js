@@ -58,6 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Preprocess Markdown content before parsing
+  function parseMarkdown(text) {
+    if (!text) return '';
+    // Convert parenthesis list markers (e.g., "1) ", "  2) ") to standard markdown lists ("1. ", "  2. ")
+    const processedText = text.replace(/^(\s*)(\d+)\)\s/gm, '$1$2. ');
+    return marked.parse(processedText);
+  }
+
   // ==========================================================================
   // 1. Dark Mode / Light Mode Theme Switching
   // ==========================================================================
@@ -503,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
           answerDiv.className = 'assistant-response';
           
           // Render Markdown
-          answerDiv.innerHTML = marked.parse(ans.text);
+          answerDiv.innerHTML = parseMarkdown(ans.text);
           codexGroup.appendChild(answerDiv);
         });
       }
