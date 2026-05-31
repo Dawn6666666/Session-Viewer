@@ -85,6 +85,39 @@ export function startServer(port = 3000) {
       }
     }
 
+    // --- API: Download output text files ---
+    if (pathname.startsWith('/api/download/') && req.method === 'GET') {
+      const parts = pathname.split('/');
+      const type = parts[parts.length - 2]; // 'clean', 'super_clean', or 'full_history'
+      const sessionId = parts[parts.length - 1];
+      const sessionDir = path.join(projectRootDir, 'outputs', sessionId);
+      
+      let filePath = '';
+      let downloadName = '';
+      
+      if (type === 'clean') {
+        filePath = path.join(sessionDir, 'dialogue_clean.txt');
+        downloadName = `${sessionId}_clean.txt`;
+      } else if (type === 'super_clean') {
+        filePath = path.join(sessionDir, 'dialogue_super_clean.txt');
+        downloadName = `${sessionId}_super_clean.txt`;
+      } else if (type === 'full_history') {
+        filePath = path.join(sessionDir, 'full_history.txt');
+        downloadName = `${sessionId}_full_history.txt`;
+      }
+      
+      if (!filePath || !fs.existsSync(filePath)) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end('File not found');
+      }
+      
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(downloadName)}"`
+      });
+      return fs.createReadStream(filePath).pipe(res);
+    }
+
     // --- API: Get detailed session JSON ---
     if (pathname.startsWith('/api/session/') && req.method === 'GET') {
       const sessionId = pathname.split('/').pop();

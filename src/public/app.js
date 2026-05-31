@@ -295,6 +295,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateStr = sessionMeta?.date ? new Date(sessionMeta.date).toLocaleString('zh-CN') : '未知日期';
     sessionDetails.textContent = `会话分析完成时间: ${dateStr}`;
 
+    // Dynamically render download buttons in the header
+    const downloadLinks = document.getElementById('downloadLinks');
+    if (downloadLinks) {
+      downloadLinks.innerHTML = `
+        <a href="/api/download/clean/${fileBaseName}" class="btn-download" download title="下载干净版对话文本 (.txt)">
+          <i data-lucide="download"></i>
+          干净版对话 (.txt)
+        </a>
+        <a href="/api/download/super_clean/${fileBaseName}" class="btn-download" download title="下载超净纯对话文本 (.txt)">
+          <i data-lucide="download"></i>
+          极简版对话 (.txt)
+        </a>
+      `;
+      // Compile new Lucide icons inside the download panel
+      lucide.createIcons({
+        attrs: {
+          class: 'lucide'
+        },
+        nameAttr: 'data-lucide',
+        nodeList: downloadLinks.querySelectorAll('[data-lucide]')
+      });
+    }
+
     // Render active dialog timeline
     renderActiveSessionTimeline();
   }
