@@ -33,10 +33,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // New Pagination & Controls Elements
   const btnFocusMode = document.getElementById('btnFocusMode');
   const btnScrollMode = document.getElementById('btnScrollMode');
+  const btnPreviewTxtMode = document.getElementById('btnPreviewTxtMode');
   const paginationBar = document.getElementById('paginationBar');
   const btnPrevTurn = document.getElementById('btnPrevTurn');
   const btnNextTurn = document.getElementById('btnNextTurn');
   const currentTurnLabel = document.getElementById('currentTurnLabel');
+
+  // Text Preview elements
+  const txtPreviewContainer = document.getElementById('txtPreviewContainer');
+  const txtPreviewContent = document.getElementById('txtPreviewContent');
+  const btnCopyTxt = document.getElementById('btnCopyTxt');
 
   // Initialize Lucide Icons
   lucide.createIcons();
@@ -93,7 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
     viewMode = 'focus';
     btnFocusMode.classList.add('active');
     btnScrollMode.classList.remove('active');
+    btnPreviewTxtMode.classList.remove('active');
+    
     paginationBar.style.display = 'flex';
+    timeline.style.display = 'flex';
+    txtPreviewContainer.style.display = 'none';
+    
     renderActiveSessionTimeline();
   });
 
@@ -102,8 +113,63 @@ document.addEventListener('DOMContentLoaded', () => {
     viewMode = 'scroll';
     btnScrollMode.classList.add('active');
     btnFocusMode.classList.remove('active');
+    btnPreviewTxtMode.classList.remove('active');
+    
     paginationBar.style.display = 'none';
+    timeline.style.display = 'flex';
+    txtPreviewContainer.style.display = 'none';
+    
     renderActiveSessionTimeline();
+  });
+
+  btnPreviewTxtMode.addEventListener('click', () => {
+    if (viewMode === 'preview') return;
+    viewMode = 'preview';
+    btnPreviewTxtMode.classList.add('active');
+    btnFocusMode.classList.remove('active');
+    btnScrollMode.classList.remove('active');
+    
+    paginationBar.style.display = 'none';
+    timeline.style.display = 'none';
+    txtPreviewContainer.style.display = 'block';
+    
+    loadPlainTextPreview();
+  });
+
+  async function loadPlainTextPreview() {
+    if (!activeSessionId) return;
+    txtPreviewContent.textContent = '正在获取对话文本内容...';
+    try {
+      const response = await fetch(`/api/preview/${activeSessionId}`);
+      if (!response.ok) throw new Error('无法读取文件内容');
+      const text = await response.text();
+      txtPreviewContent.textContent = text;
+    } catch (err) {
+      txtPreviewContent.textContent = `加载预览失败: ${err.message}`;
+    }
+  }
+
+  btnCopyTxt.addEventListener('click', () => {
+    const textToCopy = txtPreviewContent.textContent;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      const originalHtml = btnCopyTxt.innerHTML;
+      btnCopyTxt.innerHTML = '<i data-lucide="check" style="width: 12px; height: 12px; margin-right: 4px;"></i> 已复制!';
+      lucide.createIcons({
+        attrs: { class: 'lucide' },
+        nameAttr: 'data-lucide',
+        nodeList: btnCopyTxt.querySelectorAll('[data-lucide]')
+      });
+      setTimeout(() => {
+        btnCopyTxt.innerHTML = originalHtml;
+        lucide.createIcons({
+          attrs: { class: 'lucide' },
+          nameAttr: 'data-lucide',
+          nodeList: btnCopyTxt.querySelectorAll('[data-lucide]')
+        });
+      }, 2000);
+    }).catch(err => {
+      alert('复制失败，请手动选择复制。');
+    });
   });
 
   btnPrevTurn.addEventListener('click', () => {
@@ -262,11 +328,20 @@ document.addEventListener('DOMContentLoaded', () => {
       activeSessionTurns = sessionData.turns || [];
       currentTurnIndex = 0;
 
-      // Handle visibility of pagination bar
+      // Handle visibility of pagination bar and containers based on active mode
       if (viewMode === 'focus') {
         paginationBar.style.display = 'flex';
-      } else {
+        timeline.style.display = 'flex';
+        txtPreviewContainer.style.display = 'none';
+      } else if (viewMode === 'scroll') {
         paginationBar.style.display = 'none';
+        timeline.style.display = 'flex';
+        txtPreviewContainer.style.display = 'none';
+      } else if (viewMode === 'preview') {
+        paginationBar.style.display = 'none';
+        timeline.style.display = 'none';
+        txtPreviewContainer.style.display = 'block';
+        loadPlainTextPreview();
       }
 
       renderSessionDetail(sessionData);

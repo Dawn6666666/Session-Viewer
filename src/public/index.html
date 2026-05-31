@@ -114,6 +114,10 @@
                             <i data-lucide="menu" style="width: 14px; height: 14px; margin-right: 6px;"></i>
                             时间线滚动
                         </button>
+                        <button class="view-mode-btn" id="btnPreviewTxtMode">
+                            <i data-lucide="file-text" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                            文本日志预览
+                        </button>
                     </div>
 
                     <!-- Pagination Controller -->
@@ -133,6 +137,22 @@
                 <!-- Conversation Timeline (Max width: 740px) -->
                 <div class="timeline" id="timeline">
                     <!-- Turns will be dynamically inserted here -->
+                </div>
+
+                <!-- Plaintext TXT Preview Container -->
+                <div class="txt-preview-container" id="txtPreviewContainer" style="display: none; width: 100%; max-width: 100%; padding: 0;">
+                    <div class="artifact" style="margin: 0;">
+                        <div class="artifact-header">
+                            <span id="previewFileName">dialogue_clean.txt</span>
+                            <button class="btn-download" id="btnCopyTxt" style="height: 28px; padding: 0 12px; font-size: 0.72rem; cursor: pointer;">
+                                <i data-lucide="copy" style="width: 12px; height: 12px; margin-right: 4px;"></i>
+                                复制全文
+                            </button>
+                        </div>
+                        <div class="artifact-body" style="background: var(--bg-terminal);">
+                            <pre style="margin: 0; padding: 24px; font-family: var(--font-mono); font-size: 0.86rem; line-height: 1.6; color: var(--text-terminal); white-space: pre-wrap; word-break: break-all; max-height: 70vh; overflow-y: auto;" id="txtPreviewContent">正在加载文本内容...</pre>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>

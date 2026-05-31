@@ -118,6 +118,26 @@ export function startServer(port = 3000) {
       return fs.createReadStream(filePath).pipe(res);
     }
 
+    // --- API: Get preview of dialogue_clean.txt ---
+    if (pathname.startsWith('/api/preview/') && req.method === 'GET') {
+      const sessionId = pathname.split('/').pop();
+      const filePath = path.join(projectRootDir, 'outputs', sessionId, 'dialogue_clean.txt');
+      
+      if (!fs.existsSync(filePath)) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end('Preview not found');
+      }
+      
+      try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end(content);
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end(err.message);
+      }
+    }
+
     // --- API: Get detailed session JSON ---
     if (pathname.startsWith('/api/session/') && req.method === 'GET') {
       const sessionId = pathname.split('/').pop();
