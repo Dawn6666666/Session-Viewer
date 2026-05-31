@@ -5,8 +5,21 @@ import { parseLogFile } from './parser/logParser.js';
 import { writeDialogueOutputs } from './writers/dialogueWriter.js';
 import { writeFullHistoryOutput } from './writers/historyWriter.js';
 import { writeSplitTurnsOutput } from './writers/splitTurnsWriter.js';
+import { startServer } from './server.js';
 
 async function main() {
+  // Check if CLI flags contain --server or -s
+  if (process.argv.includes('--server') || process.argv.includes('-s')) {
+    const portIndex = process.argv.findIndex(arg => arg === '--server' || arg === '-s') + 1;
+    let port = 3000;
+    if (portIndex < process.argv.length) {
+      const parsedPort = parseInt(process.argv[portIndex], 10);
+      if (!isNaN(parsedPort)) port = parsedPort;
+    }
+    startServer(port);
+    return;
+  }
+
   // Resolve configuration from CLI arguments
   const config = resolveConfig(process.argv[2]);
   
@@ -32,6 +45,13 @@ async function main() {
     writeDialogueOutputs(turns, config);
     writeFullHistoryOutput(events, config);
     writeSplitTurnsOutput(turns, config);
+
+    // Save structured session.json for the web server frontend
+    fs.writeFileSync(
+      path.join(config.sessionOutputDir, 'session.json'),
+      JSON.stringify({ events, turns, uniqueToolsCount, fileBaseName: config.fileBaseName }, null, 2),
+      'utf-8'
+    );
     
     console.log(`\n🎉 Conversion complete! All outputs have been written to files.`);
   } catch (error) {

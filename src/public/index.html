@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Log Viewer - Claude Design System</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <!-- Top Navigation -->
+    <nav>
+        <div class="nav-content">
+            <a href="#" class="nav-logo">
+                <div class="logo-icon">S</div>
+                <span>Session Viewer</span>
+            </a>
+
+            <div class="nav-actions">
+                <span class="nav-spec-text">Claude Design Philosophy</span>
+                <!-- Theme Toggle Button -->
+                <button class="theme-toggle" id="themeBtn" aria-label="切换深色模式" title="切换深色模式">
+                    <!-- Moon Icon (Default for Light mode) -->
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="app-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>会话历史</h2>
+                <div class="search-wrapper">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="搜索会话..." autocomplete="off">
+                </div>
+            </div>
+
+            <!-- Session List Scrollable -->
+            <div class="session-list" id="sessionList">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <span>正在加载历史会话...</span>
+                </div>
+            </div>
+
+            <!-- Drag & Drop Upload Zone -->
+            <div class="upload-zone" id="uploadZone">
+                <i data-lucide="upload-cloud" class="upload-icon"></i>
+                <div class="upload-text">
+                    <span class="upload-primary">拖拽 .jsonl 日志文件到这里</span>
+                    <span class="upload-secondary">或点击选择文件</span>
+                </div>
+                <input type="file" id="fileInput" accept=".jsonl" style="display: none;">
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="workspace" id="workspace">
+            <!-- Empty state greeting -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">C</div>
+                <h1>克制的艺术</h1>
+                <p>
+                    为什么在追求炫目动效的 AI 浪潮中，我们选择回归纸张、油墨与优雅的字型排版？<br>
+                    从左侧历史列表中选择一个会话日志，或者直接拖放一个新的 <code>.jsonl</code> 文件，开始深度探索。
+                </p>
+                <div style="margin-top: 32px;">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <i data-lucide="plus" style="width: 18px; height: 18px; margin-right: 6px;"></i>
+                        导入原始会话日志
+                    </button>
+                </div>
+            </div>
+
+            <!-- Session Detail View -->
+            <div class="session-view" id="sessionView" style="display: none;">
+                <!-- Header -->
+                <header class="session-header">
+                    <div class="session-meta-tags">
+                        <span class="tag">Codex Session</span>
+                        <span class="tag" id="sessionTurnsCount">0 Turns</span>
+                        <span class="tag" id="sessionToolsCount">0 Tool Calls</span>
+                    </div>
+                    <h1 id="sessionTitle" class="session-title">rollout-2026-05-29...</h1>
+                    <div class="session-sub-meta">
+                        <span id="sessionDetails">Size: 0 MB · Date: -</span>
+                    </div>
+                </header>
+
+                <!-- Conversation Timeline (Max width: 740px) -->
+                <div class="timeline" id="timeline">
+                    <!-- Turns will be dynamically inserted here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js" type="module"></script>
+</body>
+</html>
