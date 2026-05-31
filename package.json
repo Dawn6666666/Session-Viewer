@@ -1,0 +1,23 @@
+{
+  "name": "session-converter",
+  "version": "1.0.0",
+  "description": "A highly modular tool for parsing, formatting, and analysis of Codex and IDE session logs (JSONL formats).",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "convert": "node src/index.js"
+  },
+  "keywords": [
+    "session",
+    "parser",
+    "codex",
+    "log-analyzer",
+    "conversations"
+  ],
+  "author": "Antigravity",
+  "license": "ISC",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

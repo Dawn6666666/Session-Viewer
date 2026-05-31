@@ -1,0 +1,17 @@
+# Logs and generated conversation files
+*.jsonl
+*_dialogue_clean.txt
+*_dialogue_super_clean.txt
+*_full_history.txt
+*_split_turns/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
