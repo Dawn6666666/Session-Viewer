@@ -17,6 +17,9 @@ export function formatTime(timestampMs) {
  */
 export function truncateText(text, maxLines) {
   if (!text) return '';
+  if (typeof text !== 'string') {
+    text = typeof text === 'object' ? JSON.stringify(text, null, 2) : String(text);
+  }
   const lines = text.split('\n');
   if (lines.length <= maxLines) return text;
   
